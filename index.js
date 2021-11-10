@@ -29,9 +29,27 @@ const admin = firebase.initializeApp(firebaseConfig);
 const db = admin.firestore();
 //Fetch or AXOIS
 const fetch = require('node-fetch');
-//wer
+//FILE SYSTEM
+const FileType = require('file-type');
+const path = require("path");
+const os = require("os");
+const fs = require("fs");
+//web
 const app = express();
 const port = 3000
+
+app.get('/media', async function(req, res) {    
+    let filename = path.join(__dirname, "media.html");
+    res.sendFile(filename);
+});
+
+app.get('/api/media', async function(req, res) {
+    let response = await db.collection('medias').get();
+    let medias = response.docs.map(doc => doc.data());
+    console.log(medias);
+    res.send(JSON.stringify(medias) )       
+});
+
 
 app.post('/webhook', line.middleware(config), (req, res) => {
     //console.log(req);
@@ -41,9 +59,27 @@ app.post('/webhook', line.middleware(config), (req, res) => {
 });
 
 async function handleEvent(event) {
-    if (event.type !== 'message' || event.message.type !== 'text') {
+    //if (event.type !== 'message' || event.message.type !== 'text') {
+        if (event.type !== 'message' || ! ["text","image"].includes(event.message.type)  ) {
+            console.log("ERROR", event.type);
+    
         return Promise.resolve(null);
     }
+    
+    if(event.message.type === 'image'){
+        console.log("This is an image!!!",event.message);
+        return client.replyMessage(event.replyToken, {
+            type: 'text',
+            text: "Thank for an image",
+        });
+    }
+
+
+
+
+
+
+
      // SAVE TO FIREBASE
      let chat = await db.collection('chats').add(event);
      console.log('Added document with ID: ', chat.id);
